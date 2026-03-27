@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #ffffff;
+  --foreground: #0f172a;
+  --surface: #f8fafb;
+  --navy: #003366;
+  --teal: #00a3a3;
+  --emerald: #2ecc71;
+  --gold: #c5a059;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-inter), var(--font-cairo), system-ui, sans-serif;
+}
+
+html[lang="ar"] body {
+  font-family: var(--font-cairo), var(--font-inter), system-ui, sans-serif;
+}
