@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Cairo, Inter } from "next/font/google";
+import { SessionTenantSync } from "@/components/auth/session-tenant-sync";
 import { AppSettingsProvider } from "@/components/providers/app-settings-provider";
+import { AuthProvider } from "@/components/providers/auth-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,7 +29,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${cairo.variable} antialiased`}>
-        <AppSettingsProvider>{children}</AppSettingsProvider>
+        <AppSettingsProvider>
+          <AuthProvider>
+            <SessionTenantSync />
+            {children}
+          </AuthProvider>
+        </AppSettingsProvider>
       </body>
     </html>
   );

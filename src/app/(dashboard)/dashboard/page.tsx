@@ -19,6 +19,9 @@ import {
   onboardingForTenant,
   tasksForTenant,
 } from "@/lib/data/dummy";
+import { DeptDonutChart } from "@/components/analytics/dept-donut";
+import { HeadcountChart } from "@/components/analytics/headcount-chart";
+import { HiresExitsBar } from "@/components/analytics/hires-bar";
 
 export default function DashboardPage() {
   const { tenantId, roleId, label } = useAppSettings();
@@ -69,8 +72,17 @@ export default function DashboardPage() {
         />
       </div>
 
+      <div className="mt-10 grid gap-6 lg:grid-cols-3">
+        <HeadcountChart
+          title={label("Headcount trend", "اتجاه عدد الموظفين")}
+          subtitle={label("Demo series for this tenant view", "سلسلة تجريبية")}
+        />
+        <HiresExitsBar title={label("Hires vs exits", "التعيينات مقابل الخروج")} />
+        <DeptDonutChart title={label("By department", "حسب القسم")} />
+      </div>
+
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[#003366]">
             {label("AI highlights", "أبرز الذكاء الاصطناعي")}
           </h2>
@@ -101,7 +113,7 @@ export default function DashboardPage() {
           </Link>
         </section>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[#003366]">
             {label("Upcoming tasks", "المهام القادمة")}
           </h2>
@@ -152,7 +164,7 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-5 shadow-sm">
       <div className="flex items-center justify-between text-teal-600">
         <span className="rounded-lg bg-teal-50 p-2 text-teal-700">{icon}</span>
       </div>

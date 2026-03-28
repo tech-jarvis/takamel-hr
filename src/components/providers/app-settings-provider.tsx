@@ -47,7 +47,7 @@ const AppSettingsContext = createContext<AppSettingsValue | null>(null);
 
 export function AppSettingsProvider({ children }: { children: ReactNode }) {
   const [tenantId, setTenantState] = useState<TenantId>("alrajhi_tech");
-  const [roleId, setRoleState] = useState<RoleId>("hr_admin");
+  const [roleId, setRoleState] = useState<RoleId>("company_super_admin");
   const [locale, setLocaleState] = useState<Locale>("en");
   const [hydrated, setHydrated] = useState(false);
 
@@ -58,7 +58,7 @@ export function AppSettingsProvider({ children }: { children: ReactNode }) {
       readStored(
         STORAGE.role,
         ROLES.map((r) => r.id),
-        "hr_admin"
+        "company_super_admin"
       )
     );
     setLocaleState(readStored(STORAGE.locale, ["en", "ar"] as const, "en"));

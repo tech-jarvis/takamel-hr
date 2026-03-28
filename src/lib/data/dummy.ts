@@ -415,3 +415,365 @@ export function aiInsightsForTenant(tenantId: TenantId) {
 export function jobById(tenantId: TenantId, jobId: string) {
   return JOBS.find((j) => j.tenantId === tenantId && j.id === jobId) ?? null;
 }
+
+/** Demo series for dashboards / reports (not tenant-specific for prototype). */
+export const HEADCOUNT_TREND = [
+  { name: "Oct", headcount: 118, hires: 4, exits: 1 },
+  { name: "Nov", headcount: 121, hires: 5, exits: 2 },
+  { name: "Dec", headcount: 124, hires: 6, exits: 3 },
+  { name: "Jan", headcount: 128, hires: 7, exits: 2 },
+  { name: "Feb", headcount: 131, hires: 5, exits: 1 },
+  { name: "Mar", headcount: 134, hires: 8, exits: 2 },
+];
+
+export const DEPT_DISTRIBUTION = [
+  { name: "People", value: 18 },
+  { name: "Engineering", value: 44 },
+  { name: "Product", value: 22 },
+  { name: "Operations", value: 31 },
+  { name: "Other", value: 19 },
+];
+
+/* ——— HRMS: home, calendar, mail, PTO, self-onboarding, invites ——— */
+
+export interface HomeFeedItem {
+  id: string;
+  tenantId: TenantId;
+  title: string;
+  body: string;
+  at: string;
+  kind: "announcement" | "task" | "policy";
+}
+
+export interface CalendarEventRow {
+  id: string;
+  tenantId: TenantId;
+  title: string;
+  start: string;
+  end: string;
+  type: "meeting" | "holiday" | "review" | "leave";
+}
+
+export interface MailItem {
+  id: string;
+  tenantId: TenantId;
+  subject: string;
+  from: string;
+  preview: string;
+  at: string;
+  unread: boolean;
+  folder: "inbox" | "sent";
+}
+
+export interface PtoRequest {
+  id: string;
+  tenantId: TenantId;
+  employeeName: string;
+  type: string;
+  start: string;
+  end: string;
+  status: "Pending" | "Approved" | "Denied";
+  days: number;
+}
+
+export interface SelfOnboardingStep {
+  id: string;
+  tenantId: TenantId;
+  title: string;
+  done: boolean;
+  due?: string;
+}
+
+export interface PendingInvite {
+  id: string;
+  tenantId: TenantId;
+  email: string;
+  role: string;
+  sentAt: string;
+  status: "Pending" | "Accepted";
+}
+
+const HOME_FEED: HomeFeedItem[] = [
+  {
+    id: "f1",
+    tenantId: "alrajhi_tech",
+    title: "Q2 town hall",
+    body: "Save the date: April 4, 3pm — strategy and KSA hiring priorities.",
+    at: "2026-03-26",
+    kind: "announcement",
+  },
+  {
+    id: "f2",
+    tenantId: "alrajhi_tech",
+    title: "Policy: remote work Fridays",
+    body: "Updated guideline in the handbook — please acknowledge in your profile.",
+    at: "2026-03-24",
+    kind: "policy",
+  },
+  {
+    id: "f3",
+    tenantId: "oasis_retail",
+    title: "Ramadan schedule",
+    body: "Adjusted hours for stores in Riyadh and Jeddah regions.",
+    at: "2026-03-22",
+    kind: "announcement",
+  },
+  {
+    id: "f4",
+    tenantId: "red_sea_hospitality",
+    title: "Guest experience playbook",
+    body: "New scripts for VIP arrivals — read by April 1.",
+    at: "2026-03-25",
+    kind: "policy",
+  },
+];
+
+const CALENDAR_EVENTS: CalendarEventRow[] = [
+  {
+    id: "ev1",
+    tenantId: "alrajhi_tech",
+    title: "1:1 — Maha",
+    start: "2026-03-28T10:00",
+    end: "2026-03-28T10:30",
+    type: "review",
+  },
+  {
+    id: "ev2",
+    tenantId: "alrajhi_tech",
+    title: "Eid holiday (company)",
+    start: "2026-03-30T00:00",
+    end: "2026-04-02T23:59",
+    type: "holiday",
+  },
+  {
+    id: "ev3",
+    tenantId: "alrajhi_tech",
+    title: "Talent sync",
+    start: "2026-03-31T14:00",
+    end: "2026-03-31T15:00",
+    type: "meeting",
+  },
+  {
+    id: "ev4",
+    tenantId: "oasis_retail",
+    title: "Store walkthrough — Jeddah",
+    start: "2026-03-29T09:00",
+    end: "2026-03-29T12:00",
+    type: "meeting",
+  },
+  {
+    id: "ev5",
+    tenantId: "red_sea_hospitality",
+    title: "Site stand-up",
+    start: "2026-03-28T08:30",
+    end: "2026-03-28T09:00",
+    type: "meeting",
+  },
+];
+
+const MAIL: MailItem[] = [
+  {
+    id: "m1",
+    tenantId: "alrajhi_tech",
+    subject: "Action: sign updated code of conduct",
+    from: "People Ops <people@example.sa>",
+    preview: "Please review and e-sign by March 31…",
+    at: "2026-03-27T08:12",
+    unread: true,
+    folder: "inbox",
+  },
+  {
+    id: "m2",
+    tenantId: "alrajhi_tech",
+    subject: "Your PTO request was approved",
+    from: "Takamel HR <no-reply@takamel.sa>",
+    preview: "Annual leave Apr 10–12 approved by Sara Almutairi.",
+    at: "2026-03-26T16:40",
+    unread: false,
+    folder: "inbox",
+  },
+  {
+    id: "m3",
+    tenantId: "alrajhi_tech",
+    subject: "Re: Interview panel for Product Designer",
+    from: "You",
+    preview: "Thanks — I added Nora to the panel for Thursday.",
+    at: "2026-03-25T11:05",
+    unread: false,
+    folder: "sent",
+  },
+  {
+    id: "m4",
+    tenantId: "red_sea_hospitality",
+    subject: "Welcome to Takamel HR",
+    from: "People <people@example.sa>",
+    preview: "Complete your profile to access schedules.",
+    at: "2026-03-27T09:00",
+    unread: true,
+    folder: "inbox",
+  },
+];
+
+const PTO_REQUESTS: PtoRequest[] = [
+  {
+    id: "p1",
+    tenantId: "alrajhi_tech",
+    employeeName: "Khalid Alqahtani",
+    type: "Annual leave",
+    start: "2026-04-10",
+    end: "2026-04-12",
+    status: "Approved",
+    days: 3,
+  },
+  {
+    id: "p2",
+    tenantId: "alrajhi_tech",
+    employeeName: "Maha Alshehri",
+    type: "Sick leave",
+    start: "2026-03-29",
+    end: "2026-03-29",
+    status: "Pending",
+    days: 1,
+  },
+  {
+    id: "p3",
+    tenantId: "oasis_retail",
+    employeeName: "Reem Alzahrani",
+    type: "Annual leave",
+    start: "2026-04-20",
+    end: "2026-04-25",
+    status: "Pending",
+    days: 5,
+  },
+  {
+    id: "p4",
+    tenantId: "red_sea_hospitality",
+    employeeName: "Yousef Alghamdi",
+    type: "Annual leave",
+    start: "2026-04-14",
+    end: "2026-04-16",
+    status: "Pending",
+    days: 3,
+  },
+];
+
+const SELF_ONBOARDING: SelfOnboardingStep[] = [
+  {
+    id: "s1",
+    tenantId: "alrajhi_tech",
+    title: "Upload Iqama / national ID",
+    done: true,
+    due: "2026-03-20",
+  },
+  {
+    id: "s2",
+    tenantId: "alrajhi_tech",
+    title: "Emergency contact & bank details",
+    done: true,
+  },
+  {
+    id: "s3",
+    tenantId: "alrajhi_tech",
+    title: "Read security & data policy",
+    done: false,
+    due: "2026-03-30",
+  },
+  {
+    id: "s4",
+    tenantId: "alrajhi_tech",
+    title: "Meet your buddy — schedule 30 min",
+    done: false,
+    due: "2026-04-01",
+  },
+  {
+    id: "s5",
+    tenantId: "oasis_retail",
+    title: "Uniform sizing & delivery address",
+    done: false,
+    due: "2026-03-28",
+  },
+  {
+    id: "s6",
+    tenantId: "red_sea_hospitality",
+    title: "Complete hospitality compliance module",
+    done: false,
+    due: "2026-04-05",
+  },
+];
+
+const INVITES: PendingInvite[] = [
+  {
+    id: "i1",
+    tenantId: "alrajhi_tech",
+    email: "newhire.march@example.sa",
+    role: "Employee — Engineering",
+    sentAt: "2026-03-26",
+    status: "Pending",
+  },
+  {
+    id: "i2",
+    tenantId: "alrajhi_tech",
+    email: "contractor.audit@example.sa",
+    role: "Contractor — Finance",
+    sentAt: "2026-03-24",
+    status: "Pending",
+  },
+  {
+    id: "i3",
+    tenantId: "oasis_retail",
+    email: "store.lead.jed@example.sa",
+    role: "Hiring manager",
+    sentAt: "2026-03-20",
+    status: "Accepted",
+  },
+  {
+    id: "i4",
+    tenantId: "red_sea_hospitality",
+    email: "guide.alula@example.sa",
+    role: "Employee — Guest services",
+    sentAt: "2026-03-26",
+    status: "Pending",
+  },
+];
+
+export function homeFeedForTenant(tenantId: TenantId) {
+  return filterByTenant(HOME_FEED, tenantId);
+}
+
+export function calendarForTenant(tenantId: TenantId) {
+  return filterByTenant(CALENDAR_EVENTS, tenantId);
+}
+
+export function mailForTenant(tenantId: TenantId, folder: "inbox" | "sent") {
+  return filterByTenant(MAIL, tenantId).filter((m) => m.folder === folder);
+}
+
+export function ptoForTenant(tenantId: TenantId) {
+  return filterByTenant(PTO_REQUESTS, tenantId);
+}
+
+export function selfOnboardingForTenant(tenantId: TenantId) {
+  return filterByTenant(SELF_ONBOARDING, tenantId);
+}
+
+export function invitesForTenant(tenantId: TenantId) {
+  return filterByTenant(INVITES, tenantId);
+}
+
+/** Demo “you” = second employee in tenant when exists (e.g. Khalid at Al Rajhi). */
+export function demoCurrentEmployee(tenantId: TenantId): Employee | null {
+  const list = employeesForTenant(tenantId);
+  return list[1] ?? list[0] ?? null;
+}
+
+/** Peers + reports: same manager or report to demo user. */
+export function teamForTenant(tenantId: TenantId): Employee[] {
+  const list = employeesForTenant(tenantId);
+  const me = demoCurrentEmployee(tenantId);
+  if (!me) return list;
+  return list.filter(
+    (e) =>
+      e.id !== me.id &&
+      (e.managerId === me.id || e.managerId === me.managerId || me.managerId === e.id)
+  );
+}

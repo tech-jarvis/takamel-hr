@@ -60,13 +60,13 @@ export function LandingHero() {
           )}
         </p>
         <div className="mt-10 flex flex-wrap gap-4">
-          <Link href="/dashboard">
+          <Link href="/login">
             <Button className="rounded-2xl px-6 py-3 text-base">
-              {label("Open workspace", "فتح مساحة العمل")}
+              {label("Sign in to workspace", "تسجيل الدخول")}
               <ArrowRight className="h-4 w-4 ltr:rotate-0 rtl:rotate-180" />
             </Button>
           </Link>
-          <Link href="/recruitment">
+          <Link href="/login?next=/recruitment">
             <Button variant="outline" className="rounded-2xl px-6 py-3 text-base">
               {label("See recruitment", "استكشف التوظيف")}
             </Button>
