@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/page-header";
 import { useAppSettings } from "@/components/providers/app-settings-provider";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
+import { ROLES } from "@/lib/config/roles";
 import { tenantById } from "@/lib/config/tenants";
 
 export default function SecurityPage() {
@@ -50,6 +51,19 @@ export default function SecurityPage() {
                   : label("Company workspace", "مساحة العمل للشركة")}
               </dd>
             </div>
+            {session?.roleId ? (
+              <div>
+                <dt className="text-slate-500">
+                  {label("Role in this session", "الدور في هذه الجلسة")}
+                </dt>
+                <dd className="mt-0.5 font-medium text-slate-900">
+                  {label(
+                    ROLES.find((r) => r.id === session.roleId)?.labelEn ?? session.roleId,
+                    ROLES.find((r) => r.id === session.roleId)?.labelAr ?? session.roleId
+                  )}
+                </dd>
+              </div>
+            ) : null}
             {session?.scope === "company" && tenant ? (
               <div>
                 <dt className="text-slate-500">
@@ -106,7 +120,10 @@ export default function SecurityPage() {
             router.push("/login");
           }}
         >
-          {label("Sign out everywhere (this browser)", "تسجيل الخروج (هذا المتصفح)")}
+          {label(
+            "Sign out on this browser",
+            "تسجيل الخروج من هذا المتصفح"
+          )}
         </Button>
       </div>
     </div>

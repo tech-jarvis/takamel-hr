@@ -41,6 +41,18 @@ export default function RolesPage() {
         descriptionAr="مسؤول الشركة يحدد من يصل لشاشات التوظيف مقابل حزمة الموارد. مدير المنصة يعمل على مستوى المستأجرين."
       />
 
+      <div className="mb-6 rounded-2xl border border-[#003366]/15 bg-gradient-to-r from-[#003366]/6 to-teal-500/10 px-4 py-3 text-sm text-slate-700">
+        <p className="font-medium text-[#003366]">
+          {label("Two different things", "أمران مختلفان")}
+        </p>
+        <p className="mt-1 text-slate-600">
+          {label(
+            "The matrix below is the target access model for your company (no “platform manager” column — that lives on the operator console). Current session role is shown in the context bar.",
+            "الجدول أدناه هو نموذج الصلاحيات المستهدف للشركة (دون عمود «مدير المنصة» — ذلك في واجهة المشغّل). الدور الحالي للجلسة يظهر في شريط السياق.",
+          )}
+        </p>
+      </div>
+
       <div className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-[var(--border)] bg-[var(--card)] p-1.5 shadow-sm">
         {TABS.map((t) => (
           <button

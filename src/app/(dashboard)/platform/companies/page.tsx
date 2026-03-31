@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
+import { NewCompanyWizard } from "@/components/platform/new-company-wizard";
 import { useAppSettings } from "@/components/providers/app-settings-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,33 +11,45 @@ import { TENANTS } from "@/lib/config/tenants";
 
 export default function PlatformCompaniesPage() {
   const { label, tenantId, setTenantId } = useAppSettings();
-  const [created, setCreated] = useState<string[]>([]);
-
-  function createDemo() {
-    const name = `Demo Co ${created.length + 1}`;
-    setCreated((c) => [...c, name]);
-  }
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [queued, setQueued] = useState<
+    { name: string; industry: string; adminEmail: string }[]
+  >([]);
 
   return (
     <div>
       <PageHeader
         titleEn="Companies"
         titleAr="الشركات"
-        descriptionEn="Register a new organization on the platform. Prototype: mock create + existing demo tenants."
-        descriptionAr="تسجيل مؤسسة جديدة على المنصة. النموذج: إنشاء وهمي + مستأجرون تجريبيون."
+        descriptionEn="Register a new organization on the platform. Use the wizard for a realistic flow; table rows are demo tenants."
+        descriptionAr="تسجيل مؤسسة جديدة على المنصة. استخدم المعالج لتدفق واقعي؛ الصفوف في الجدول مستأجرون تجريبيون."
+      />
+
+      <NewCompanyWizard
+        open={wizardOpen}
+        onClose={() => setWizardOpen(false)}
+        onComplete={(row) => setQueued((q) => [...q, row])}
       />
 
       <div className="mb-8 flex flex-wrap gap-3">
-        <Button type="button" className="rounded-xl" onClick={createDemo}>
+        <Button type="button" className="rounded-xl" onClick={() => setWizardOpen(true)}>
           <Plus className="h-4 w-4" />
           {label("New company", "شركة جديدة")}
         </Button>
       </div>
 
-      {created.length > 0 ? (
-        <div className="mb-8 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-emerald-900">
-          {label("Queued (UI only):", "في الانتظار (واجهة فقط):")}{" "}
-          {created.join(", ")}
+      {queued.length > 0 ? (
+        <div className="mb-8 space-y-2 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4 text-sm text-emerald-900">
+          <p className="font-semibold">
+            {label("Queued (UI only)", "في الانتظار (واجهة فقط)")}
+          </p>
+          <ul className="list-inside list-disc space-y-1">
+            {queued.map((q, i) => (
+              <li key={`${q.name}-${i}`}>
+                <strong>{q.name}</strong> — {q.industry} — {q.adminEmail}
+              </li>
+            ))}
+          </ul>
         </div>
       ) : null}
 

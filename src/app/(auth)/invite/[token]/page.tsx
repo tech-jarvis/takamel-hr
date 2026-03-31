@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { tenantIdFromInviteToken } from "@/lib/auth/invite-tenant";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 
@@ -19,9 +20,11 @@ export default function InviteAcceptPage() {
   }, [ready, session, pendingContinue, router]);
 
   function accept() {
+    const tenantId = tenantIdFromInviteToken(token);
     signIn(`invited+${token}@takamel.sa`, undefined, {
       scope: "company",
-      tenantId: "alrajhi_tech",
+      tenantId,
+      roleId: "employee",
     });
     setPendingContinue(true);
   }
@@ -35,8 +38,8 @@ export default function InviteAcceptPage() {
       </p>
       <div className="mt-8 space-y-3 rounded-2xl border border-slate-200 bg-slate-50/80 p-5 text-sm text-slate-700">
         <p>
-          <strong>Al Rajhi Digital</strong> (example) invited you to Takamel HR to complete pre-boarding
-          tasks before day one.
+          Demo: your invite token maps to a demo company in the browser. In production the server would
+          resolve the token to your real organization and role.
         </p>
       </div>
       <Button type="button" onClick={accept} className="mt-8 w-full rounded-xl py-3">

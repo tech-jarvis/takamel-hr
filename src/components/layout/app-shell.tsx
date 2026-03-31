@@ -9,7 +9,6 @@ import {
   Globe,
   LogOut,
   Menu,
-  Shield,
   Sparkles,
   X,
 } from "lucide-react";
@@ -22,7 +21,7 @@ import {
   type NavSection,
 } from "@/lib/config/navigation";
 import { TENANTS, tenantById } from "@/lib/config/tenants";
-import { ROLES, roleAllowed, type RoleId } from "@/lib/config/roles";
+import { ROLES, roleAllowed } from "@/lib/config/roles";
 import { useAppSettings } from "@/components/providers/app-settings-provider";
 import { useAuth } from "@/components/providers/auth-provider";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +31,7 @@ import { cn } from "@/lib/utils/cn";
 /** Avoid parent path matching child (e.g. /recruitment vs /recruitment/jobs). */
 function navLinkActive(pathname: string, href: string): boolean {
   if (pathname === href) return true;
-  const parentsExact = ["/dashboard", "/recruitment", "/platform", "/hrms/home"];
+  const parentsExact = ["/dashboard", "/recruitment", "/hrms/home", "/security", "/roadmap"];
   if (parentsExact.includes(href)) return false;
   return pathname.startsWith(`${href}/`);
 }
@@ -40,36 +39,34 @@ function navLinkActive(pathname: string, href: string): boolean {
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { signOut, session } = useAuth();
-  const { tenantId, setTenantId, roleId, setRoleId, locale, setLocale, label } =
+  const { signOut, session, updateRole } = useAuth();
+  const { tenantId, setTenantId, roleId, locale, setLocale, label } =
     useAppSettings();
   const tenant = tenantById(tenantId);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [tenantOpen, setTenantOpen] = useState(false);
-  const [roleOpen, setRoleOpen] = useState(false);
 
   const scope = session?.scope ?? "company";
+  const navRoleId = session?.roleId ?? roleId;
 
   useEffect(() => {
-    if (scope === "platform" && roleId !== "platform_manager") {
-      setRoleId("platform_manager");
+    if (!session) return;
+    if (session.scope === "platform" && session.roleId !== "platform_manager") {
+      updateRole("platform_manager");
+    } else if (
+      session.scope === "company" &&
+      session.roleId === "platform_manager"
+    ) {
+      updateRole("company_super_admin");
     }
-    if (scope === "company" && roleId === "platform_manager") {
-      setRoleId("company_super_admin");
-    }
-  }, [scope, roleId, setRoleId]);
-
-  const roleChoices = useMemo(
-    () => ROLES.filter((r) => r.scope === scope),
-    [scope]
-  );
+  }, [session, updateRole]);
 
   const navFiltered = useMemo(
     () =>
       NAV_ITEMS.filter((item) =>
-        roleAllowed(roleId, item.roles, { loginScope: scope })
+        roleAllowed(navRoleId, item.roles, { loginScope: scope })
       ),
-    [roleId, scope]
+    [navRoleId, scope]
   );
 
   const bySection = useMemo(() => {
@@ -169,7 +166,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                               ? "text-white shadow-md"
                               : isRecruitment
                                 ? "text-slate-700 hover:bg-amber-50/90"
-                                : section === "hr_suite"
+                                : section === "hr_operations"
                                   ? "text-slate-700 hover:bg-teal-50/60"
                                   : "text-slate-600 hover:bg-slate-50"
                           )}
@@ -255,7 +252,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                   type="button"
                   onClick={() => {
                     setTenantOpen(!tenantOpen);
-                    setRoleOpen(false);
                   }}
                   className="flex max-w-[220px] items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-left text-sm shadow-sm hover:bg-slate-50/80"
                 >
@@ -290,51 +286,6 @@ export function AppShell({ children }: { children: ReactNode }) {
                 ) : null}
               </>
             )}
-          </div>
-
-          <div className="relative hidden sm:block">
-            <button
-              type="button"
-              onClick={() => {
-                setRoleOpen(!roleOpen);
-                setTenantOpen(false);
-              }}
-              className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-white px-3 py-2 text-sm shadow-sm hover:bg-slate-50/80"
-            >
-              <Shield className="h-4 w-4 text-[#C5A059]" />
-              <span className="max-w-[200px] truncate font-medium text-slate-800">
-                {label(
-                  ROLES.find((r) => r.id === roleId)?.labelEn ?? "",
-                  ROLES.find((r) => r.id === roleId)?.labelAr ?? ""
-                )}
-              </span>
-              <ChevronDown className="h-4 w-4 text-slate-400" />
-            </button>
-            {roleOpen ? (
-              <div className="absolute start-0 top-full z-50 mt-1 max-h-80 w-80 overflow-y-auto rounded-xl border border-[var(--border)] bg-white py-1 shadow-lg">
-                {roleChoices.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => {
-                      setRoleId(r.id as RoleId);
-                      setRoleOpen(false);
-                    }}
-                    className={cn(
-                      "flex w-full flex-col items-start px-3 py-2 text-start hover:bg-amber-50/50",
-                      r.id === roleId && "bg-amber-50/90"
-                    )}
-                  >
-                    <span className="text-sm font-medium text-slate-800">
-                      {label(r.labelEn, r.labelAr)}
-                    </span>
-                    <span className="text-xs text-slate-500">
-                      {label(r.descriptionEn, r.descriptionAr)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
           </div>
 
           <div className="ms-auto flex flex-wrap items-center gap-2">
@@ -377,6 +328,28 @@ export function AppShell({ children }: { children: ReactNode }) {
           sections={visibleModuleSections}
           onNavigate={() => setMobileOpen(false)}
         />
+
+        <div className="border-b border-[var(--border)] bg-gradient-to-r from-[#003366]/5 via-teal-500/10 to-emerald-500/10 px-4 py-2 text-xs text-slate-700 md:px-8">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <span>
+              <strong>{label("Company", "الشركة")}:</strong>{" "}
+              {label(tenant.nameEn, tenant.nameAr)}
+            </span>
+            <span>
+              <strong>{label("Scope", "النطاق")}:</strong>{" "}
+              {scope === "platform"
+                ? label("Platform", "المنصة")
+                : label("Company", "الشركة")}
+            </span>
+            <span>
+              <strong>{label("Role", "الدور")}:</strong>{" "}
+              {label(
+                ROLES.find((r) => r.id === navRoleId)?.labelEn ?? navRoleId,
+                ROLES.find((r) => r.id === navRoleId)?.labelAr ?? navRoleId
+              )}
+            </span>
+          </div>
+        </div>
 
         <main className="takamel-main flex-1 p-4 md:p-8">{children}</main>
       </div>

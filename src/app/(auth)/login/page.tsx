@@ -6,8 +6,8 @@ import { FormEvent, useEffect, useState, Suspense } from "react";
 import { Building2, Landmark } from "lucide-react";
 import { useAppSettings } from "@/components/providers/app-settings-provider";
 import { useAuth } from "@/components/providers/auth-provider";
-import type { LoginScope } from "@/lib/config/roles";
-import { safePostLoginPath } from "@/lib/auth/route-scope";
+import { COMPANY_ROLES, type LoginScope, type RoleId } from "@/lib/config/roles";
+import { resolvePostLoginDestination } from "@/lib/auth/route-scope";
 import type { TenantId } from "@/lib/config/tenants";
 import { TENANTS } from "@/lib/config/tenants";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,18 @@ function LoginForm() {
   const [email, setEmail] = useState("admin@company.sa");
   const [password, setPassword] = useState("demo1234");
   const [scope, setScope] = useState<LoginScope>("company");
+  const [companyRoleId, setCompanyRoleId] = useState<RoleId>("company_super_admin");
   const [companyTenantId, setCompanyTenantId] = useState<TenantId>(
     TENANTS[0].id
   );
   const nextParam = searchParams.get("next");
+  const scopeQuery = searchParams.get("scope");
+
+  useEffect(() => {
+    if (scopeQuery === "platform" || scopeQuery === "company") {
+      setScope(scopeQuery);
+    }
+  }, [scopeQuery]);
 
   useEffect(() => {
     const allowed = TENANTS.map((t) => t.id);
@@ -36,7 +44,11 @@ function LoginForm() {
 
   useEffect(() => {
     if (!ready || !session) return;
-    const path = safePostLoginPath(nextParam, session.scope);
+    const path = resolvePostLoginDestination(
+      nextParam,
+      session.scope,
+      session.roleId
+    );
     router.replace(path);
   }, [ready, session, router, nextParam]);
 
@@ -46,6 +58,7 @@ function LoginForm() {
     signIn(email, password, {
       scope,
       tenantId: scope === "company" ? companyTenantId : undefined,
+      roleId: scope === "company" ? companyRoleId : "platform_manager",
     });
   }
 
@@ -96,7 +109,7 @@ function LoginForm() {
       </div>
 
       {scope === "company" ? (
-        <div className="mt-6">
+        <div className="mt-6 space-y-4">
           <label
             className="block text-sm font-medium text-slate-700"
             htmlFor="org"
@@ -111,7 +124,7 @@ function LoginForm() {
           >
             {TENANTS.map((t) => (
               <option key={t.id} value={t.id}>
-                {t.nameEn} — {t.industry}
+                {label(t.nameEn, t.nameAr)} — {t.industry}
               </option>
             ))}
           </select>
@@ -121,6 +134,26 @@ function LoginForm() {
               "سترى هذه الشركة فقط بعد تسجيل الدخول. تغيير المؤسسة يتطلب تسجيل الخروج."
             )}
           </p>
+          <div>
+            <label
+              className="block text-sm font-medium text-slate-700"
+              htmlFor="role"
+            >
+              {label("Sign in as", "الدخول كـ")}
+            </label>
+            <select
+              id="role"
+              value={companyRoleId}
+              onChange={(e) => setCompanyRoleId(e.target.value as RoleId)}
+              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm outline-none ring-teal-500/30 focus:ring-2"
+            >
+              {COMPANY_ROLES.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {label(r.labelEn, r.labelAr)}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       ) : null}
 
@@ -155,8 +188,11 @@ function LoginForm() {
           />
         </div>
         <div className="flex items-center justify-between text-sm">
-          <Link href="/forgot-password" className="font-medium text-teal-700 hover:underline">
-            Forgot password?
+          <Link
+            href="/forgot-password"
+            className="font-medium text-teal-700 hover:underline"
+          >
+            {label("Forgot password?", "نسيت كلمة المرور؟")}
           </Link>
         </div>
         <Button type="submit" className="w-full rounded-xl py-3">

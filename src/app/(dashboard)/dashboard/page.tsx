@@ -5,16 +5,17 @@ import Link from "next/link";
 import {
   Briefcase,
   ClipboardList,
-  TrendingUp,
-  Users,
+  Clock3,
+  UserCheck,
 } from "lucide-react";
 import { PageHeader } from "@/components/layout/page-header";
 import { useAppSettings } from "@/components/providers/app-settings-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Badge } from "@/components/ui/badge";
 import { featuresForTenant } from "@/lib/config/features";
 import { tenantById } from "@/lib/config/tenants";
 import {
-  aiInsightsForTenant,
+  candidatesForTenant,
   jobsForTenant,
   onboardingForTenant,
   tasksForTenant,
@@ -25,50 +26,51 @@ import { HiresExitsBar } from "@/components/analytics/hires-bar";
 
 export default function DashboardPage() {
   const { tenantId, roleId, label } = useAppSettings();
+  const { session } = useAuth();
   const tenant = tenantById(tenantId);
   const jobs = jobsForTenant(tenantId);
+  const candidates = candidatesForTenant(tenantId);
   const onboarding = onboardingForTenant(tenantId);
   const tasks = tasksForTenant(tenantId, roleId);
-  const insights = aiInsightsForTenant(tenantId);
   const features = featuresForTenant(tenantId);
+  const published = jobs.filter((j) => j.status === "Published");
+  const offers = candidates.filter((c) => c.stage === "Offer");
+  const timeToFillDays = Math.max(18, 45 - published.length * 3);
+  const onboardingEta = onboarding.length > 0 ? "6d" : "0d";
 
   return (
     <div>
       <PageHeader
         titleEn={`Welcome back — ${tenant.nameEn}`}
         titleAr={`مرحباً بعودتك — ${tenant.nameAr}`}
-        descriptionEn="Operational snapshot for this tenant. Switch organization or role from the header to see how navigation and data change."
-        descriptionAr="لمحة تشغيلية لهذا المستأجر. بدّل المؤسسة أو الدور من الشريط العلوي لرؤية التغيير."
+        descriptionEn="Operational snapshot for the current company and role shown in the context bar."
+        descriptionAr="لمحة تشغيلية للشركة والدور الحاليين الظاهرين في شريط السياق."
       />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
           icon={<Briefcase className="h-5 w-5" />}
           title={label("Open roles", "الوظائف المفتوحة")}
-          value={String(jobs.filter((j) => j.status === "Published").length)}
+          value={String(published.length)}
           hint={label("Published jobs", "وظائف منشورة")}
         />
         <MetricCard
-          icon={<Users className="h-5 w-5" />}
-          title={label("Onboarding", "الانضمام")}
-          value={String(onboarding.length)}
-          hint={label("Active journeys", "رحلات نشطة")}
+          icon={<Clock3 className="h-5 w-5" />}
+          title={label("Avg. time to fill", "متوسط زمن التوظيف")}
+          value={`${timeToFillDays}d`}
+          hint={label("Hiring speed", "سرعة التوظيف")}
+        />
+        <MetricCard
+          icon={<UserCheck className="h-5 w-5" />}
+          title={label("Offer acceptance", "قبول العروض")}
+          value={`${offers.length}/${Math.max(candidates.length, 1)}`}
+          hint={label("Candidate conversion", "تحويل المرشحين")}
         />
         <MetricCard
           icon={<ClipboardList className="h-5 w-5" />}
-          title={label("Tasks", "المهام")}
-          value={String(tasks.length)}
-          hint={label("In your queue", "في قائمتك")}
-        />
-        <MetricCard
-          icon={<TrendingUp className="h-5 w-5" />}
-          title={label("AI insights", "رؤى ذكية")}
-          value={String(insights.length)}
-          hint={
-            features.aiCopilot
-              ? label("Copilot on", "المساعد مفعّل")
-              : label("Copilot off", "المساعد معطّل")
-          }
+          title={label("Onboarding SLA", "مؤشر الانضمام")}
+          value={onboardingEta}
+          hint={label("Time to complete", "زمن الإنجاز")}
         />
       </div>
 
@@ -84,33 +86,48 @@ export default function DashboardPage() {
       <div className="mt-10 grid gap-8 lg:grid-cols-2">
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">
           <h2 className="text-lg font-semibold text-[#003366]">
-            {label("AI highlights", "أبرز الذكاء الاصطناعي")}
+            {label("Demo journey shortcuts", "اختصارات رحلة العرض")}
           </h2>
-          <ul className="mt-4 space-y-4">
-            {insights.map((i) => (
-              <li
-                key={i.id}
-                className="rounded-xl border border-slate-100 bg-slate-50/80 p-4"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <p className="font-medium text-slate-800">{i.title}</p>
-                  <Badge
-                    variant={i.impact === "high" ? "teal" : "neutral"}
-                    className="shrink-0 capitalize"
-                  >
-                    {i.impact}
-                  </Badge>
-                </div>
-                <p className="mt-2 text-sm text-slate-600">{i.detail}</p>
+          <ul className="mt-4 space-y-3">
+            {[
+              {
+                id: "journey-a",
+                href: session?.scope === "platform" ? "/platform/companies" : "/admin/organization",
+                en: session?.scope === "platform" ? "A. Platform creates a company" : "A. Company profile and controls",
+                ar: session?.scope === "platform" ? "أ. المنصة تنشئ شركة" : "أ. ملف الشركة والضوابط",
+              },
+              {
+                id: "journey-b",
+                href: "/admin/organization",
+                en: "B. Company admin configures org",
+                ar: "ب. مسؤول الشركة يضبط المؤسسة",
+              },
+              {
+                id: "journey-c",
+                href: "/recruitment/hr-handoff",
+                en: "C. Candidate handoff to HR",
+                ar: "ج. تسليم المرشح إلى الموارد",
+              },
+            ].map((j) => (
+              <li key={j.id}>
+                <Link
+                  href={j.href}
+                  className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/80 p-3 text-sm font-medium text-slate-800 hover:border-teal-200 hover:bg-teal-50/40"
+                >
+                  <span>{label(j.en, j.ar)}</span>
+                  <span className="text-teal-700">→</span>
+                </Link>
               </li>
             ))}
           </ul>
-          <Link
-            href="/ai"
-            className="mt-4 inline-block text-sm font-medium text-teal-700 hover:underline"
-          >
-            {label("Open AI layer →", "فتح طبقة الذكاء ←")}
-          </Link>
+          {!features.aiCopilot ? null : (
+            <p className="mt-4 text-xs text-slate-500">
+              {label(
+                "AI remains embedded in screening, insights, and workflow hints — not a separate module.",
+                "الذكاء مدمج في الفرز والرؤى والتنبيهات — وليس وحدة مستقلة."
+              )}
+            </p>
+          )}
         </section>
 
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 shadow-sm">

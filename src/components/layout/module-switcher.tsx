@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Home,
+  Lock,
   Building2,
   GitBranch,
-  LayoutDashboard,
   Rocket,
   UsersRound,
 } from "lucide-react";
@@ -21,11 +22,11 @@ import { tenantById } from "@/lib/config/tenants";
 import { cn } from "@/lib/utils/cn";
 
 const SECTION_ICONS: Record<NavSection, typeof Building2> = {
-  platform: Building2,
-  intelligence: LayoutDashboard,
+  home: Home,
   recruitment: GitBranch,
-  hr_suite: UsersRound,
-  future: Rocket,
+  hr_operations: UsersRound,
+  admin_security: Lock,
+  roadmap: Rocket,
 };
 
 export function ModuleSwitcher({

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   BookOpen,
@@ -11,7 +12,9 @@ import {
   Sparkles,
   Users,
 } from "lucide-react";
+import { defaultPostLoginPath } from "@/lib/auth/route-scope";
 import { useAppSettings } from "@/components/providers/app-settings-provider";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 
 const HERO_IMG =
@@ -22,7 +25,9 @@ const THIRD_IMG =
   "https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=1200&q=80";
 
 export function ProductHome() {
+  const router = useRouter();
   const { label, locale, setLocale } = useAppSettings();
+  const { session, ready } = useAuth();
 
   return (
     <div className="min-h-screen bg-[var(--background)] text-slate-900">
@@ -51,9 +56,25 @@ export function ProductHome() {
             >
               {locale === "en" ? "العربية" : "English"}
             </button>
-            <Link href="/login">
-              <Button className="rounded-xl px-4">{label("Sign in", "تسجيل الدخول")}</Button>
-            </Link>
+            {ready && session ? (
+              <Button
+                type="button"
+                className="rounded-xl px-4"
+                onClick={() =>
+                  router.push(defaultPostLoginPath(session.scope, session.roleId))
+                }
+              >
+                {label("Open app", "فتح التطبيق")}
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                className="rounded-xl px-4"
+                onClick={() => router.push("/login?scope=company")}
+              >
+                {label("Sign in", "تسجيل الدخول")}
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -94,20 +115,24 @@ export function ProductHome() {
             )}
           </p>
           <div className="mt-10 flex flex-wrap gap-4">
-            <Link href="/login">
-              <Button className="rounded-2xl px-8 py-3 text-base shadow-lg">
-                {label("Start with your company", "ابدأ بشركتك")}
-                <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-              </Button>
-            </Link>
-            <Link href="/login?next=/platform/companies">
-              <Button
-                variant="outline"
-                className="rounded-2xl border-white/40 bg-white/10 px-8 py-3 text-base text-white backdrop-blur hover:bg-white/20"
-              >
-                {label("Platform manager", "مدير المنصة")}
-              </Button>
-            </Link>
+            <Button
+              type="button"
+              className="rounded-2xl px-8 py-3 text-base shadow-lg"
+              onClick={() => router.push("/login?scope=company")}
+            >
+              {label("Start with your company", "ابدأ بشركتك")}
+              <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-2xl border-white/40 bg-white/10 px-8 py-3 text-base text-white backdrop-blur hover:bg-white/20"
+              onClick={() =>
+                router.push("/login?scope=platform&next=/platform/companies")
+              }
+            >
+              {label("Platform manager", "مدير المنصة")}
+            </Button>
           </div>
         </div>
       </section>
@@ -224,11 +249,19 @@ export function ProductHome() {
                 "مدير المنصة ينشئ الشركات. لكل شركة مسؤول أعلى يعيّن أدوار الموارد والتوظيف والموظفين — معزول لكل مستأجر.",
               )}
             </p>
-            <Link href="/login" className="mt-8 inline-block">
-              <Button className="rounded-2xl bg-white px-6 py-3 text-[#003366] hover:bg-slate-100">
-                {label("Open the prototype", "افتح النموذج")}
-              </Button>
-            </Link>
+            <Button
+              type="button"
+              className="mt-8 rounded-2xl bg-white px-6 py-3 text-[#003366] hover:bg-slate-100"
+              onClick={() =>
+                router.push(
+                  ready && session
+                    ? defaultPostLoginPath(session.scope, session.roleId)
+                    : "/login?scope=company"
+                )
+              }
+            >
+              {label("Open the prototype", "افتح النموذج")}
+            </Button>
           </div>
           <div className="relative aspect-video overflow-hidden rounded-2xl ring-2 ring-[#C5A059]/40">
             <Image src={THIRD_IMG} alt="" fill className="object-cover opacity-90" sizes="(max-width:768px) 100vw, 50vw" />
